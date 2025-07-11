@@ -14,29 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          hometown: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          hometown?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          hometown?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Students: {
         Row: {
           dorm: string | null
           filename: string | null
           hometown: string | null
-          id: number | null
+          id: number
           name: string | null
         }
         Insert: {
           dorm?: string | null
           filename?: string | null
           hometown?: string | null
-          id?: number | null
+          id: number
           name?: string | null
         }
         Update: {
           dorm?: string | null
           filename?: string | null
           hometown?: string | null
-          id?: number | null
+          id?: number
           name?: string | null
         }
         Relationships: []
+      }
+      user_student_knowledge: {
+        Row: {
+          created_at: string
+          id: string
+          knows_student: boolean
+          student_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          knows_student: boolean
+          student_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          knows_student?: boolean
+          student_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_student_knowledge_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "Students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
