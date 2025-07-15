@@ -49,10 +49,11 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
             supabaseClient={supabase}
             appearance={{ theme: ThemeSupa }}
             providers={['google']}
-            redirectTo={window.location.origin}
+            redirectTo={`${window.location.origin}/`}
             view="sign_in"
             showLinks={true}
-            magicLink={false}
+            onlyThirdPartyProviders={false}
+            socialLayout="horizontal"
           />
         </div>
       </div>
