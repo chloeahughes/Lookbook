@@ -50,6 +50,7 @@ export type Database = {
           filename: string | null
           hometown: string | null
           id: number
+          image_url: string | null
           name: string | null
         }
         Insert: {
@@ -57,6 +58,7 @@ export type Database = {
           filename?: string | null
           hometown?: string | null
           id: number
+          image_url?: string | null
           name?: string | null
         }
         Update: {
@@ -64,6 +66,7 @@ export type Database = {
           filename?: string | null
           hometown?: string | null
           id?: number
+          image_url?: string | null
           name?: string | null
         }
         Relationships: []
