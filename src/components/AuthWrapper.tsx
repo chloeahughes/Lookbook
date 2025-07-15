@@ -50,6 +50,9 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
             appearance={{ theme: ThemeSupa }}
             providers={['google']}
             redirectTo={window.location.origin}
+            view="sign_in"
+            showLinks={true}
+            magicLink={false}
           />
         </div>
       </div>
