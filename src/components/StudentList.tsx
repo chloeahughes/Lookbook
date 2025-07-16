@@ -19,26 +19,31 @@ export const StudentList = () => {
   }, []);
 
   const fetchData = async () => {
-    try {
-      const [studentsResult, knowledgeResult] = await Promise.all([
-        supabase.from('Students').select('*').order('name').range(0, 1725),
-        supabase.from('user_student_knowledge').select('*')
-      ]);
+  try {
+    const [studentsResult, knowledgeResult] = await Promise.all([
+      supabase.from('Students').select('*').order('name').range(0, 1725),
+      supabase.from('user_student_knowledge').select('*').range(0, 1725),
+    ]);
 
-      console.log('Raw studentsResult:', studentsResult);
-      if (studentsResult.data) {
-        console.log('Fetched students:', studentsResult.data.length);
-        setStudents(studentsResult.data);
-      }
+    console.log('Raw studentsResult:', studentsResult); // NEW LOG
+    console.log('Raw knowledgeResult:', knowledgeResult); // NEW LOG
 
-      
-      if (knowledgeResult.data) setKnowledge(knowledgeResult.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+    if (studentsResult.data) {
+      console.log('Fetched students:', studentsResult.data.length); // KEY LOG
+      setStudents(studentsResult.data);
     }
-  };
+
+    if (knowledgeResult.data) {
+      console.log('Fetched knowledge rows:', knowledgeResult.data.length); // ALSO HELPFUL
+      setKnowledge(knowledgeResult.data);
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const getKnowledgeStatus = (studentId: number) => {
     const studentKnowledge = knowledge.find(k => k.student_id === studentId);
