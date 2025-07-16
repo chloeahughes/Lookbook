@@ -9,6 +9,39 @@ import { Tables } from '@/integrations/supabase/types';
 type Student = Tables<'Students'>;
 type UserStudentKnowledge = Tables<'user_student_knowledge'>;
 
+// Fetch all rows from a Supabase table in batches
+async function fetchAllRows(table: string, batchSize = 1000) {
+  let allRows: any[] = [];
+  let from = 0;
+  let to = batchSize - 1;
+  let done = false;
+
+  while (!done) {
+    const { data, error, count } = await supabase
+      .from(table)
+      .select('*', { count: 'exact' })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      allRows = allRows.concat(data);
+      if (data.length < batchSize) {
+        done = true;
+      } else {
+        from += batchSize;
+        to += batchSize;
+      }
+    } else {
+      done = true;
+    }
+  }
+
+  return allRows;
+}
+
 export const StudentList = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [knowledge, setKnowledge] = useState<UserStudentKnowledge[]>([]);
@@ -22,23 +55,17 @@ export const StudentList = () => {
 
   const fetchData = async () => {
   try {
-    const [studentsResult, knowledgeResult] = await Promise.all([
-      supabase.from('Students').select('*').order('name').range(0, 1725),
-      supabase.from('user_student_knowledge').select('*').range(0, 1725),
-    ]);
+    // Students can still be fetched in one go if Supabase allows it
+    const studentsResult = await supabase.from('Students').select('*').order('name').range(0, 1725);
 
-    console.log('Raw studentsResult:', studentsResult); // NEW LOG
-    console.log('Raw knowledgeResult:', knowledgeResult); // NEW LOG
+    // Fetch all knowledge rows in batches
+    const allKnowledgeRows = await fetchAllRows('user_student_knowledge');
 
     if (studentsResult.data) {
-      console.log('Fetched students:', studentsResult.data.length); // KEY LOG
       setStudents(studentsResult.data);
     }
 
-    if (knowledgeResult.data) {
-      console.log('Fetched knowledge rows:', knowledgeResult.data.length); // ALSO HELPFUL
-      setKnowledge(knowledgeResult.data);
-    }
+    setKnowledge(allKnowledgeRows);
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
