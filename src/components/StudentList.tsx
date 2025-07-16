@@ -25,7 +25,13 @@ export const StudentList = () => {
         supabase.from('user_student_knowledge').select('*')
       ]);
 
-      if (studentsResult.data) setStudents(studentsResult.data);
+      console.log('Raw studentsResult:', studentsResult);
+      if (studentsResult.data) {
+        console.log('Fetched students:', studentsResult.data.length);
+        setStudents(studentsResult.data);
+      }
+
+      
       if (knowledgeResult.data) setKnowledge(knowledgeResult.data);
     } catch (error) {
       console.error('Error fetching data:', error);
