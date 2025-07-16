@@ -15,8 +15,10 @@ export const StudentList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('👀 useEffect ran');
     fetchData();
   }, []);
+
 
   const fetchData = async () => {
   try {
