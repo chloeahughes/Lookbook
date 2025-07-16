@@ -142,9 +142,8 @@ export const StudentQuiz = () => {
             </Button>
             <Button 
               onClick={() => handleResponse(true)}
-              variant="default"
               size="lg"
-              className="flex-1"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
               <Check className="w-5 h-5 mr-2" />
               I Know Them
