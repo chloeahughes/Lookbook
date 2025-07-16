@@ -13,11 +13,16 @@ export const StudentQuiz = () => {
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAvailableStudents();
   }, []);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [currentStudent]);
 
   const fetchAvailableStudents = async () => {
     try {
@@ -112,17 +117,22 @@ export const StudentQuiz = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Do You Know This Student?</h2>
       
-      <Card className="max-w-md mx-auto">
-        <CardContent className="p-8 text-center space-y-6">
-          <Avatar className="h-32 w-32 mx-auto">
-            <AvatarImage 
-              src={currentStudent.filename ? `https://sfqewnziiuzzkpfimwlx.supabase.co/storage/v1/object/public/students/${currentStudent.filename}` : undefined}
-              alt={currentStudent.name || 'Student'} 
-            />
-            <AvatarFallback className="text-2xl">
-              {currentStudent.name?.split(' ').map(n => n[0]).join('') || 'S'}
-            </AvatarFallback>
-          </Avatar>
+      <Card className="max-w-lg mx-auto">
+        <CardContent className="p-12 text-center space-y-6">
+          <div className="h-48 w-48 mx-auto rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+            {!imageError && currentStudent.filename ? (
+              <img 
+                src={`https://sfqewnziiuzzkpfimwlx.supabase.co/storage/v1/object/public/students/${currentStudent.filename}`}
+                alt={currentStudent.name || 'Student'}
+                className="h-full w-full object-cover"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="h-full w-full bg-gray-200 flex items-center justify-center text-3xl font-semibold text-gray-600">
+                {currentStudent.name?.split(' ').map(n => n[0]).join('') || 'S'}
+              </div>
+            )}
+          </div>
           
           <div>
             <h3 className="text-xl font-semibold">{currentStudent.name}</h3>
