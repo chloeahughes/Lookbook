@@ -46,8 +46,13 @@ export const StudentList = () => {
   };
 
   const getImageUrl = (student: Student) => {
-    if (student.image_url) return student.image_url;
-    if (student.filename) return `https://sfqewnziiuzzkpfimwlx.supabase.co/storage/v1/object/public/students/${student.filename}`;
+    // Always prefer image_url if it exists, otherwise construct from filename
+    if (student.image_url) {
+      return student.image_url;
+    }
+    if (student.filename) {
+      return `https://sfqewnziiuzzkpfimwlx.supabase.co/storage/v1/object/public/students/${student.filename}`;
+    }
     return undefined;
   };
 
@@ -67,6 +72,13 @@ export const StudentList = () => {
                   src={getImageUrl(student)} 
                   alt={student.name || 'Student'}
                   className="object-cover w-full h-full"
+                  onError={(e) => {
+                    console.log('Image failed to load:', getImageUrl(student));
+                    console.log('Student data:', student);
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully:', getImageUrl(student));
+                  }}
                 />
                 <AvatarFallback className="text-lg font-semibold">
                   {student.name?.split(' ').map(n => n[0]).join('') || 'S'}
