@@ -21,7 +21,7 @@ export const StudentList = () => {
   const fetchData = async () => {
     try {
       const [studentsResult, knowledgeResult] = await Promise.all([
-        supabase.from('Students').select('*').order('name'),
+        supabase.from('Students').select('*').order('name').range(0, 1725),
         supabase.from('user_student_knowledge').select('*')
       ]);
 
