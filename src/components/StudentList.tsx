@@ -62,12 +62,13 @@ export const StudentList = () => {
         return (
           <Card key={student.id} className="hover:shadow-md transition-shadow">
             <CardContent className="flex items-center space-x-4 p-4">
-              <Avatar className="h-12 w-12">
+              <Avatar className="h-16 w-16 flex-shrink-0">
                 <AvatarImage 
                   src={getImageUrl(student)} 
-                  alt={student.name || 'Student'} 
+                  alt={student.name || 'Student'}
+                  className="object-cover w-full h-full"
                 />
-                <AvatarFallback>
+                <AvatarFallback className="text-lg font-semibold">
                   {student.name?.split(' ').map(n => n[0]).join('') || 'S'}
                 </AvatarFallback>
               </Avatar>
