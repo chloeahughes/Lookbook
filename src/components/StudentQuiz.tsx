@@ -51,25 +51,30 @@ export const StudentQuiz = () => {
     }
   };
 
-  const handleResponse = async (knows: boolean) => {
+  const [lastRatedStudent, setLastRatedStudent] = useState<{ student: Student; knows: boolean | 'know_of' } | null>(null);
+
+  const handleResponse = async (knows: boolean | 'know_of') => {
     if (!currentStudent) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Store for undo functionality
+      setLastRatedStudent({ student: currentStudent, knows });
+
       const { error } = await supabase
         .from('user_student_knowledge')
         .insert({
           user_id: user.id,
           student_id: currentStudent.id!,
-          knows_student: knows
+          knows_student: knows === true ? true : knows === false ? false : null // null for "know of"
         });
 
       if (error) throw error;
 
       toast({
-        title: knows ? "Marked as Known" : "Marked as Unknown",
+        title: knows === true ? "Marked as Known" : knows === false ? "Marked as Unknown" : "Marked as Know Of",
         description: `${currentStudent.name} has been recorded.`
       });
 
@@ -87,6 +92,41 @@ export const StudentQuiz = () => {
       toast({
         title: "Error",
         description: "Failed to save your response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!lastRatedStudent) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Remove the last rating
+      const { error } = await supabase
+        .from('user_student_knowledge')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('student_id', lastRatedStudent.student.id);
+
+      if (error) throw error;
+
+      // Add the student back to available list and set as current
+      setAvailableStudents(prev => [...prev, lastRatedStudent.student]);
+      setCurrentStudent(lastRatedStudent.student);
+      setLastRatedStudent(null);
+
+      toast({
+        title: "Undone",
+        description: `Rating for ${lastRatedStudent.student.name} has been removed.`
+      });
+    } catch (error) {
+      console.error('Error undoing rating:', error);
+      toast({
+        title: "Error",
+        description: "Failed to undo rating. Please try again.",
         variant: "destructive"
       });
     }
@@ -140,7 +180,17 @@ export const StudentQuiz = () => {
             <p className="text-muted-foreground">{currentStudent.dorm}</p>
           </div>
           
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-3 justify-center">
+            {lastRatedStudent && (
+              <Button 
+                onClick={handleUndo}
+                variant="outline"
+                size="lg"
+                className="px-4"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+            )}
             <Button 
               onClick={() => handleResponse(false)}
               variant="destructive"
@@ -149,6 +199,14 @@ export const StudentQuiz = () => {
             >
               <X className="w-5 h-5 mr-2" />
               Don't Know
+            </Button>
+            <Button 
+              onClick={() => handleResponse('know_of')}
+              variant="secondary"
+              size="lg"
+              className="flex-1"
+            >
+              Know Of
             </Button>
             <Button 
               onClick={() => handleResponse(true)}

@@ -10,16 +10,16 @@ type Student = Tables<'Students'>;
 type UserStudentKnowledge = Tables<'user_student_knowledge'>;
 
 // Fetch all rows from a Supabase table in batches
-async function fetchAllRows(table: string, batchSize = 1000) {
-  let allRows: any[] = [];
+async function fetchAllRows(tableName: 'user_student_knowledge', batchSize = 1000): Promise<UserStudentKnowledge[]> {
+  let allRows: UserStudentKnowledge[] = [];
   let from = 0;
   let to = batchSize - 1;
   let done = false;
 
   while (!done) {
-    const { data, error, count } = await supabase
-      .from(table)
-      .select('*', { count: 'exact' })
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
       .range(from, to);
 
     if (error) {
