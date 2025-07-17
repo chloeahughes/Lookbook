@@ -31,15 +31,15 @@ export const Demographics = () => {
         .select(`
           Students!inner(name, hometown, dorm)
         `)
-        .eq('knows_student', true);
+        .eq('knowledge_status', 'knows');
 
-      // Get unknown students
+      // Get unknown students  
       const { data: unknownStudents } = await supabase
         .from('user_student_knowledge')
         .select(`
           Students!inner(name, hometown, dorm)
         `)
-        .eq('knows_student', false);
+        .eq('knowledge_status', 'does_not_know');
 
       const processData = (students: any[]): DemographicData => {
         const hometown: { [key: string]: number } = {};

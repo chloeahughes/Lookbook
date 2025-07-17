@@ -68,7 +68,7 @@ export const StudentQuiz = () => {
         .insert({
           user_id: user.id,
           student_id: currentStudent.id!,
-          knows_student: knows === true ? true : knows === false ? false : null // null for "know of"
+          knowledge_status: knows === true ? 'knows' : knows === false ? 'does_not_know' : 'knows_of'
         });
 
       if (error) throw error;

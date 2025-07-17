@@ -77,10 +77,11 @@ export const StudentList = () => {
   const getKnowledgeStatus = (studentId: number) => {
     const studentKnowledge = knowledge.find(k => k.student_id === studentId);
     if (!studentKnowledge) return 'unrated';
-    return studentKnowledge.knows_student ? 'known' : 'unknown';
+    return studentKnowledge.knowledge_status === 'knows' ? 'known' : 
+           studentKnowledge.knowledge_status === 'does_not_know' ? 'unknown' : 'know_of';
   };
 
-  const filterStudentsByStatus = (status: 'all' | 'known' | 'unknown' | 'unrated') => {
+  const filterStudentsByStatus = (status: 'all' | 'known' | 'unknown' | 'know_of' | 'unrated') => {
     if (status === 'all') return students;
     return students.filter(student => getKnowledgeStatus(student.id || 0) === status);
   };
@@ -129,8 +130,8 @@ export const StudentList = () => {
                 <p className="text-sm text-muted-foreground">{student.hometown}</p>
                 <p className="text-sm text-muted-foreground">{student.dorm}</p>
               </div>
-              <Badge variant={status === 'known' ? 'default' : status === 'unknown' ? 'destructive' : 'secondary'}>
-                {status === 'known' ? 'Known' : status === 'unknown' ? 'Unknown' : 'Unrated'}
+              <Badge variant={status === 'known' ? 'default' : status === 'unknown' ? 'destructive' : status === 'know_of' ? 'outline' : 'secondary'}>
+                {status === 'known' ? 'Known' : status === 'unknown' ? 'Unknown' : status === 'know_of' ? 'Know Of' : 'Unrated'}
               </Badge>
             </CardContent>
           </Card>
@@ -143,9 +144,10 @@ export const StudentList = () => {
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">All Students</h2>
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">All ({students.length})</TabsTrigger>
           <TabsTrigger value="known">Known ({filterStudentsByStatus('known').length})</TabsTrigger>
+          <TabsTrigger value="know_of">Know Of ({filterStudentsByStatus('know_of').length})</TabsTrigger>
           <TabsTrigger value="unknown">Unknown ({filterStudentsByStatus('unknown').length})</TabsTrigger>
           <TabsTrigger value="unrated">Unrated ({filterStudentsByStatus('unrated').length})</TabsTrigger>
         </TabsList>
@@ -154,6 +156,9 @@ export const StudentList = () => {
         </TabsContent>
         <TabsContent value="known" className="mt-4">
           {renderStudentList(filterStudentsByStatus('known'))}
+        </TabsContent>
+        <TabsContent value="know_of" className="mt-4">
+          {renderStudentList(filterStudentsByStatus('know_of'))}
         </TabsContent>
         <TabsContent value="unknown" className="mt-4">
           {renderStudentList(filterStudentsByStatus('unknown'))}

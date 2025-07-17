@@ -78,7 +78,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          knows_student: boolean
+          knowledge_status: Database["public"]["Enums"]["knowledge_status"]
           student_id: number
           updated_at: string
           user_id: string
@@ -86,7 +86,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          knows_student: boolean
+          knowledge_status: Database["public"]["Enums"]["knowledge_status"]
           student_id: number
           updated_at?: string
           user_id: string
@@ -94,7 +94,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          knows_student?: boolean
+          knowledge_status?: Database["public"]["Enums"]["knowledge_status"]
           student_id?: number
           updated_at?: string
           user_id?: string
@@ -117,7 +117,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      knowledge_status: "knows" | "knows_of" | "does_not_know"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -244,6 +244,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      knowledge_status: ["knows", "knows_of", "does_not_know"],
+    },
   },
 } as const
