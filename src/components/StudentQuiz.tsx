@@ -65,10 +65,12 @@ export const StudentQuiz = () => {
 
       const { error } = await supabase
         .from('user_student_knowledge')
-        .insert({
+        .upsert({
           user_id: user.id,
           student_id: currentStudent.id!,
           knowledge_status: knows === true ? 'knows' : knows === false ? 'does_not_know' : 'knows_of'
+        }, {
+          onConflict: 'user_id,student_id'
         });
 
       if (error) throw error;
@@ -143,7 +145,7 @@ export const StudentQuiz = () => {
   if (!currentStudent) {
     return (
       <div className="text-center space-y-6">
-        <h2 className="text-2xl font-bold">Student Quiz Complete!</h2>
+        <h2 className="text-2xl font-bold">Cards Complete!</h2>
         <p className="text-muted-foreground">You've rated all available students.</p>
         <Button onClick={resetQuiz} variant="outline">
           <RotateCcw className="w-4 h-4 mr-2" />
@@ -158,7 +160,18 @@ export const StudentQuiz = () => {
       <h2 className="text-2xl font-bold text-center">Do You Know This Student?</h2>
       
       <Card className="max-w-lg mx-auto">
-        <CardContent className="p-12 text-center space-y-6">
+        <CardContent className="p-12 text-center space-y-6 relative">
+          {lastRatedStudent && (
+            <Button 
+              onClick={handleUndo}
+              variant="outline"
+              size="sm"
+              className="absolute top-4 left-4 p-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          )}
+          
           <div className="h-48 w-48 mx-auto rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
             {!imageError && currentStudent.filename ? (
               <img 
@@ -181,16 +194,6 @@ export const StudentQuiz = () => {
           </div>
           
           <div className="flex gap-3 justify-center">
-            {lastRatedStudent && (
-              <Button 
-                onClick={handleUndo}
-                variant="outline"
-                size="lg"
-                className="px-4"
-              >
-                <RotateCcw className="w-5 h-5" />
-              </Button>
-            )}
             <Button 
               onClick={() => handleResponse(false)}
               variant="destructive"
