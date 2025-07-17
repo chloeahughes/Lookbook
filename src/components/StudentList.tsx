@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
 type Student = Tables<'Students'>;
@@ -46,6 +48,7 @@ export const StudentList = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [knowledge, setKnowledge] = useState<UserStudentKnowledge[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('👀 useEffect ran');
@@ -54,24 +57,42 @@ export const StudentList = () => {
 
 
   const fetchData = async () => {
-  try {
-    // Students can still be fetched in one go if Supabase allows it
-    const studentsResult = await supabase.from('Students').select('*').order('name').range(0, 1725);
+    try {
+      // Fetch all knowledge rows in batches first
+      const allKnowledgeRows = await fetchAllRows('user_student_knowledge');
 
-    // Fetch all knowledge rows in batches
-    const allKnowledgeRows = await fetchAllRows('user_student_knowledge');
+      // Students fetched without ordering - we'll sort them by most recently rated
+      const studentsResult = await supabase.from('Students').select('*').range(0, 1725);
 
-    if (studentsResult.data) {
-      setStudents(studentsResult.data);
+      if (studentsResult.data) {
+        // Sort students by most recently rated first
+        const sortedStudents = studentsResult.data.sort((a, b) => {
+          const aKnowledge = allKnowledgeRows.find(k => k.student_id === a.id);
+          const bKnowledge = allKnowledgeRows.find(k => k.student_id === b.id);
+          
+          // If both have knowledge, sort by updated_at (most recent first)
+          if (aKnowledge && bKnowledge) {
+            return new Date(bKnowledge.updated_at).getTime() - new Date(aKnowledge.updated_at).getTime();
+          }
+          
+          // If only one has knowledge, prioritize the one with knowledge
+          if (aKnowledge && !bKnowledge) return -1;
+          if (!aKnowledge && bKnowledge) return 1;
+          
+          // If neither has knowledge, sort alphabetically
+          return (a.name || '').localeCompare(b.name || '');
+        });
+        
+        setStudents(sortedStudents);
+      }
+
+      setKnowledge(allKnowledgeRows);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setKnowledge(allKnowledgeRows);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const getKnowledgeStatus = (studentId: number) => {
@@ -84,6 +105,71 @@ export const StudentList = () => {
   const filterStudentsByStatus = (status: 'all' | 'known' | 'unknown' | 'know_of' | 'unrated') => {
     if (status === 'all') return students;
     return students.filter(student => getKnowledgeStatus(student.id || 0) === status);
+  };
+
+  const updateStudentStatus = async (studentId: number, newStatus: 'knows' | 'does_not_know' | 'knows_of' | 'unrated') => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (newStatus === 'unrated') {
+        // Delete the record if setting to unrated
+        const { error } = await supabase
+          .from('user_student_knowledge')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('student_id', studentId);
+        
+        if (error) throw error;
+        
+        // Update local state
+        setKnowledge(prev => prev.filter(k => !(k.user_id === user.id && k.student_id === studentId)));
+      } else {
+        // Upsert the record
+        const { error } = await supabase
+          .from('user_student_knowledge')
+          .upsert({
+            user_id: user.id,
+            student_id: studentId,
+            knowledge_status: newStatus
+          }, {
+            onConflict: 'user_id,student_id'
+          });
+        
+        if (error) throw error;
+        
+        // Update local state
+        setKnowledge(prev => {
+          const existingIndex = prev.findIndex(k => k.user_id === user.id && k.student_id === studentId);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = { ...updated[existingIndex], knowledge_status: newStatus, updated_at: new Date().toISOString() };
+            return updated;
+          } else {
+            return [...prev, {
+              id: crypto.randomUUID(),
+              user_id: user.id,
+              student_id: studentId,
+              knowledge_status: newStatus,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }];
+          }
+        });
+      }
+
+      toast({
+        title: "Status updated",
+        description: "Student knowledge status has been updated.",
+      });
+    } catch (error) {
+      console.error('Error updating student status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update student status.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getImageUrl = (student: Student) => {
@@ -130,9 +216,25 @@ export const StudentList = () => {
                 <p className="text-sm text-muted-foreground">{student.hometown}</p>
                 <p className="text-sm text-muted-foreground">{student.dorm}</p>
               </div>
-              <Badge variant={status === 'known' ? 'default' : status === 'unknown' ? 'destructive' : status === 'know_of' ? 'outline' : 'secondary'}>
-                {status === 'known' ? 'Known' : status === 'unknown' ? 'Unknown' : status === 'know_of' ? 'Know Of' : 'Unrated'}
-              </Badge>
+              <div className="flex items-center space-x-3">
+                <Select
+                  value={status === 'known' ? 'knows' : status === 'unknown' ? 'does_not_know' : status === 'know_of' ? 'knows_of' : 'unrated'}
+                  onValueChange={(value) => updateStudentStatus(student.id || 0, value as 'knows' | 'does_not_know' | 'knows_of' | 'unrated')}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="knows">I Know</SelectItem>
+                    <SelectItem value="knows_of">Know Of</SelectItem>
+                    <SelectItem value="does_not_know">Don't Know</SelectItem>
+                    <SelectItem value="unrated">Unrated</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Badge variant={status === 'known' ? 'default' : status === 'unknown' ? 'destructive' : status === 'know_of' ? 'outline' : 'secondary'}>
+                  {status === 'known' ? 'Known' : status === 'unknown' ? 'Unknown' : status === 'know_of' ? 'Know Of' : 'Unrated'}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         );
