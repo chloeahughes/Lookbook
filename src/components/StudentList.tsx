@@ -65,7 +65,7 @@ export const StudentList = () => {
       const studentsResult = await supabase.from('Students').select('*').range(0, 1725);
 
       if (studentsResult.data) {
-        // Sort students by most recently rated first
+        // Sort students by most recently rated first (always)
         const sortedStudents = studentsResult.data.sort((a, b) => {
           const aKnowledge = allKnowledgeRows.find(k => k.student_id === a.id);
           const bKnowledge = allKnowledgeRows.find(k => k.student_id === b.id);
@@ -79,8 +79,8 @@ export const StudentList = () => {
           if (aKnowledge && !bKnowledge) return -1;
           if (!aKnowledge && bKnowledge) return 1;
           
-          // If neither has knowledge, sort alphabetically
-          return (a.name || '').localeCompare(b.name || '');
+          // If neither has knowledge, maintain original order (no alphabetical sorting)
+          return 0;
         });
         
         setStudents(sortedStudents);

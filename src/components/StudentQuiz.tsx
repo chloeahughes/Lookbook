@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Check, X, RotateCcw } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import { useSwipeable } from 'react-swipeable';
 
 type Student = Tables<'Students'>;
 
@@ -19,39 +20,6 @@ export const StudentQuiz = () => {
   useEffect(() => {
     fetchAvailableStudents();
   }, []);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [currentStudent]);
-
-  const fetchAvailableStudents = async () => {
-    try {
-      // Get students that haven't been rated yet
-      const { data: ratedStudentIds } = await supabase
-        .from('user_student_knowledge')
-        .select('student_id');
-
-      const ratedIds = ratedStudentIds?.map(r => r.student_id) || [];
-
-      const { data: students } = await supabase
-        .from('Students')
-        .select('*')
-        .not('id', 'in', `(${ratedIds.join(',') || '0'})`);
-
-      if (students && students.length > 0) {
-        setAvailableStudents(students);
-        setCurrentStudent(students[Math.floor(Math.random() * students.length)]);
-      } else {
-        setCurrentStudent(null);
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [lastRatedStudent, setLastRatedStudent] = useState<{ student: Student; knows: boolean | 'know_of' } | null>(null);
 
   const handleResponse = async (knows: boolean | 'know_of') => {
     if (!currentStudent) return;
@@ -99,6 +67,57 @@ export const StudentQuiz = () => {
     }
   };
 
+  // Keyboard navigation
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!currentStudent) return;
+    
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      handleResponse(false);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      handleResponse(true);
+    }
+  }, [currentStudent, handleResponse]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [currentStudent]);
+
+  const fetchAvailableStudents = async () => {
+    try {
+      // Get students that haven't been rated yet
+      const { data: ratedStudentIds } = await supabase
+        .from('user_student_knowledge')
+        .select('student_id');
+
+      const ratedIds = ratedStudentIds?.map(r => r.student_id) || [];
+
+      const { data: students } = await supabase
+        .from('Students')
+        .select('*')
+        .not('id', 'in', `(${ratedIds.join(',') || '0'})`);
+
+      if (students && students.length > 0) {
+        setAvailableStudents(students);
+        setCurrentStudent(students[Math.floor(Math.random() * students.length)]);
+      } else {
+        setCurrentStudent(null);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [lastRatedStudent, setLastRatedStudent] = useState<{ student: Student; knows: boolean | 'know_of' } | null>(null);
+
   const handleUndo = async () => {
     if (!lastRatedStudent) return;
 
@@ -142,6 +161,16 @@ export const StudentQuiz = () => {
     return <div className="text-center p-8">Loading quiz...</div>;
   }
 
+  // Swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleResponse(false),
+    onSwipedRight: () => handleResponse(true),
+    trackMouse: false,
+    trackTouch: true,
+    preventScrollOnSwipe: true,
+    delta: 50
+  });
+
   if (!currentStudent) {
     return (
       <div className="text-center space-y-6">
@@ -157,9 +186,14 @@ export const StudentQuiz = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-center">Do You Know This Student?</h2>
+      <div className="text-center">
+        <h2 className="text-2xl font-bold">Do You Know This Student?</h2>
+        <p className="text-sm text-muted-foreground mt-2">
+          Use arrow keys: ← Don't Know | → Know Them | Swipe on mobile
+        </p>
+      </div>
       
-      <Card className="max-w-lg mx-auto">
+      <Card className="max-w-lg mx-auto" {...swipeHandlers}>
         <CardContent className="p-12 text-center space-y-6 relative">
           {lastRatedStudent && (
             <Button 

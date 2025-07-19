@@ -1,9 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AuthWrapper } from '@/components/AuthWrapper';
 import { StudentList } from '@/components/StudentList';
-import { KnowledgeStats } from '@/components/KnowledgeStats';
 import { StudentQuiz } from '@/components/StudentQuiz';
-import { Demographics } from '@/components/Demographics';
+import { MyData } from '@/components/MyData';
+import { CompareWithFriends } from '@/components/CompareWithFriends';
 import { UserProfile } from '@/components/UserProfile';
 
 const Index = () => {
@@ -20,9 +20,9 @@ const Index = () => {
             <Tabs defaultValue="quiz" className="w-full">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="list">All Students</TabsTrigger>
-                <TabsTrigger value="stats">Knowledge %</TabsTrigger>
                 <TabsTrigger value="quiz">Cards</TabsTrigger>
-                <TabsTrigger value="demographics">Demographics</TabsTrigger>
+                <TabsTrigger value="data">My Data</TabsTrigger>
+                <TabsTrigger value="compare">Compare with Friends</TabsTrigger>
                 <TabsTrigger value="profile">My Profile</TabsTrigger>
               </TabsList>
 
@@ -31,16 +31,16 @@ const Index = () => {
                   <StudentList />
                 </TabsContent>
 
-                <TabsContent value="stats">
-                  <KnowledgeStats />
-                </TabsContent>
-
                 <TabsContent value="quiz">
                   <StudentQuiz />
                 </TabsContent>
 
-                <TabsContent value="demographics">
-                  <Demographics />
+                <TabsContent value="data">
+                  <MyData />
+                </TabsContent>
+
+                <TabsContent value="compare">
+                  <CompareWithFriends />
                 </TabsContent>
 
                 <TabsContent value="profile">
