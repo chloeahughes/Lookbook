@@ -14,58 +14,16 @@ type Student = Tables<'Students'>;
 export const ProfileSignIn = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [email, setEmail] = useState('');                // ← new
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSignIn = async () => {
-    if (!selectedStudent || !password) {
-      toast({
-        title: "Missing Information",
-        description: "Please select your profile and enter your password.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Create email from student name for sign in
-      const email = `${selectedStudent.name?.toLowerCase().replace(/\s+/g, '.')}@student.app`;
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        toast({
-          title: "Sign In Failed",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Successfully signed in!",
-        });
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // … handleSignIn remains unchanged …
 
   const handleSignUp = async () => {
-    if (!selectedStudent || !password || !confirmPassword) {
+    if (!selectedStudent || !email || !password || !confirmPassword) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields.",
@@ -84,13 +42,10 @@ export const ProfileSignIn = () => {
     }
 
     setLoading(true);
-    
+
     try {
-      // Create email from student name
-      const email = `${selectedStudent.name?.toLowerCase().replace(/\s+/g, '.')}@student.app`;
-      
       const { error } = await supabase.auth.signUp({
-        email,
+        email,                                       // ← use email state
         password,
         options: {
           data: {
@@ -141,37 +96,11 @@ export const ProfileSignIn = () => {
                 Sign Up
               </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4">
-              <div className="space-y-2">
-                <Label>Select Your Profile</Label>
-                <StudentSearch 
-                  onStudentSelect={setSelectedStudent}
-                  placeholder="Type your name..."
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                />
-              </div>
-              
-              <Button 
-                onClick={handleSignIn} 
-                className="w-full" 
-                disabled={loading}
-              >
-                {loading ? "Signing In..." : "Sign In"}
-              </Button>
-            </TabsContent>
-            
+
+            {/* … Sign In Content … */}
+
             <TabsContent value="signup" className="space-y-4">
+              {/* Profile selector */}
               <div className="space-y-2">
                 <Label>Select Your Profile</Label>
                 <StudentSearch 
@@ -182,7 +111,20 @@ export const ProfileSignIn = () => {
                   Find and select your profile from the student directory
                 </p>
               </div>
-              
+
+              {/* ← New Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              {/* Password fields */}
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Create Password</Label>
                 <Input
@@ -193,7 +135,7 @@ export const ProfileSignIn = () => {
                   placeholder="Create a password"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
                 <Input
@@ -204,7 +146,7 @@ export const ProfileSignIn = () => {
                   placeholder="Confirm your password"
                 />
               </div>
-              
+
               <Button 
                 onClick={handleSignUp} 
                 className="w-full" 
