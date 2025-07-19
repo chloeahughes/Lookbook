@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { ProfileSignIn } from './ProfileSignIn';
 
 interface AuthWrapperProps {
   children: (session: Session) => React.ReactNode;
@@ -38,26 +37,7 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
   }
 
   if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="max-w-md w-full mx-auto p-6">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">Lookbook</h1>
-            <p className="text-muted-foreground mt-2">Sign in to access the student knowledge tracker</p>
-          </div>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            providers={['google']}
-            redirectTo={`${window.location.origin}/`}
-            view="sign_in"
-            showLinks={true}
-            onlyThirdPartyProviders={false}
-            socialLayout="horizontal"
-          />
-        </div>
-      </div>
-    );
+    return <ProfileSignIn />;
   }
 
   return <>{children(session)}</>;

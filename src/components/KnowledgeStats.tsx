@@ -8,6 +8,7 @@ export const KnowledgeStats = () => {
     totalStudents: 0,
     knownStudents: 0,
     unknownStudents: 0,
+    knowOfStudents: 0,
     unratedStudents: 0
   });
   const [loading, setLoading] = useState(true);
@@ -20,20 +21,22 @@ export const KnowledgeStats = () => {
     try {
       const [studentsResult, knowledgeResult] = await Promise.all([
         supabase.from('Students').select('id'),
-        supabase.from('user_student_knowledge').select('knows_student')
+        supabase.from('user_student_knowledge').select('knowledge_status')
       ]);
 
       const totalStudents = studentsResult.data?.length || 0;
       const knowledgeData = knowledgeResult.data || [];
       
-      const knownStudents = knowledgeData.filter(k => k.knows_student).length;
-      const unknownStudents = knowledgeData.filter(k => !k.knows_student).length;
+      const knownStudents = knowledgeData.filter(k => k.knowledge_status === 'knows').length;
+      const unknownStudents = knowledgeData.filter(k => k.knowledge_status === 'does_not_know').length;
+      const knowOfStudents = knowledgeData.filter(k => k.knowledge_status === 'knows_of').length;
       const unratedStudents = totalStudents - knowledgeData.length;
 
       setStats({
         totalStudents,
         knownStudents,
         unknownStudents,
+        knowOfStudents,
         unratedStudents
       });
     } catch (error) {
