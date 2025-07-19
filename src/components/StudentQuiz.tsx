@@ -89,6 +89,16 @@ export const StudentQuiz = () => {
     setImageError(false);
   }, [currentStudent]);
 
+  // Swipe handlers - must be before any conditional returns
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleResponse(false),
+    onSwipedRight: () => handleResponse(true),
+    trackMouse: false,
+    trackTouch: true,
+    preventScrollOnSwipe: true,
+    delta: 50
+  });
+
   const fetchAvailableStudents = async () => {
     try {
       // Get students that haven't been rated yet
@@ -161,15 +171,6 @@ export const StudentQuiz = () => {
     return <div className="text-center p-8">Loading quiz...</div>;
   }
 
-  // Swipe handlers
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => handleResponse(false),
-    onSwipedRight: () => handleResponse(true),
-    trackMouse: false,
-    trackTouch: true,
-    preventScrollOnSwipe: true,
-    delta: 50
-  });
 
   if (!currentStudent) {
     return (
