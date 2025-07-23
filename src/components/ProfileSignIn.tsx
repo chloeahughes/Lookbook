@@ -55,14 +55,13 @@ export const ProfileSignIn = () => {
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,                                       // ← use email state
+        email,
         password,
         options: {
           data: {
             name: selectedStudent.name,
             student_id: selectedStudent.id
-          },
-          emailRedirectTo: `${window.location.origin}/`
+          }
         }
       });
 
@@ -73,9 +72,21 @@ export const ProfileSignIn = () => {
           variant: "destructive"
         });
       } else {
+        // Send welcome email
+        try {
+          await supabase.functions.invoke('send-welcome-email', {
+            body: {
+              email: email,
+              name: selectedStudent.name
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
+
         toast({
           title: "Success",
-          description: "Account created successfully! Please check your email to confirm.",
+          description: "Account created successfully! You can now sign in.",
         });
       }
     } catch (error) {
