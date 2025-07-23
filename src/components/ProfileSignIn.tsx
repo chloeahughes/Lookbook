@@ -32,6 +32,16 @@ export const ProfileSignIn = () => {
       return;
     }
 
+    // Validate Stanford email
+    if (!email.endsWith('@stanford.edu')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please use your Stanford email address (@stanford.edu).",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         title: "Password Mismatch",
