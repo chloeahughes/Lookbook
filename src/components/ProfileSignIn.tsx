@@ -20,7 +20,42 @@ export const ProfileSignIn = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // … handleSignIn remains unchanged …
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Sign In Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignUp = async () => {
     if (!selectedStudent || !email || !password || !confirmPassword) {
@@ -118,7 +153,37 @@ export const ProfileSignIn = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* … Sign In Content … */}
+            <TabsContent value="signin" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@stanford.edu"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Password</Label>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <Button 
+                onClick={handleSignIn} 
+                className="w-full" 
+                disabled={loading}
+              >
+                {loading ? "Signing In..." : "Sign In"}
+              </Button>
+            </TabsContent>
 
             <TabsContent value="signup" className="space-y-4">
               {/* Profile selector */}
